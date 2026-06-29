@@ -196,8 +196,11 @@ export default async function handler(req, res) {
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
         responseMimeType: "application/json", // ask Gemini for raw JSON
+        // Gemini 2.5 models "think" by default, which silently eats the output
+        // token budget and truncates the JSON. Turn it off for fast, complete answers.
+        thinkingConfig: { thinkingBudget: 0 },
       },
     };
     const delays = [0, 900, 2200]; // first try immediate, then backoff
