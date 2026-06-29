@@ -705,7 +705,7 @@ body{font-family:var(--display);background:var(--bg);color:var(--stone);overflow
 .chev{margin-left:9px;color:var(--stone-dim);transition:transform .25s ease;font-size:12px}
 .panel.collapsed .chev{transform:rotate(-90deg)}
 .pbody{max-height:80vh;overflow:auto;border-top:1px solid var(--hair);overscroll-behavior:contain}
-.panel.collapsed .pbody{display:none}
+.panel.dragging{transition:none}
 .step{padding:13px 15px;color:var(--stone-dim);font-size:12.5px;line-height:1.55;border-bottom:1px solid var(--hair)}
 .step b{color:var(--stone)}
 
@@ -818,7 +818,7 @@ button.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .sym svg{display:block}
 
 @media (max-width:640px){
- .panel{top:auto;bottom:0;left:0;right:0;width:auto;max-width:none;border-radius:20px 20px 0 0;border-bottom:none;box-shadow:0 -18px 44px rgba(0,0,0,.55);padding-bottom:env(safe-area-inset-bottom)}
+ .panel{top:auto;bottom:0;left:0;right:0;width:auto;max-width:none;border-radius:20px 20px 0 0;border-bottom:none;box-shadow:0 -18px 44px rgba(0,0,0,.55);padding-bottom:env(safe-area-inset-bottom);transition:transform .32s cubic-bezier(.32,.72,0,1);will-change:transform}
  .handle{display:block;width:44px;height:5px;border-radius:99px;background:var(--line);margin:9px auto 0;cursor:grab;transition:background .15s,width .15s}
 .handle:active{cursor:grabbing;background:var(--stone-faint);width:54px}
  .phead{padding:11px 16px 13px}
@@ -828,6 +828,52 @@ button.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
  .status{bottom:auto;top:calc(env(safe-area-inset-top) + 12px)}
  .leaflet-control-scale{margin-bottom:96px!important}
 }
+/* ===== Welcome / onboarding overlay ===== */
+.welcome{position:fixed;inset:0;z-index:4000;display:flex;align-items:center;justify-content:center;padding:24px;
+ background:radial-gradient(120% 90% at 50% 0%,rgba(20,26,12,.85),rgba(8,11,7,.94)),rgba(8,11,7,.55);
+ -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+ opacity:0;pointer-events:none;transition:opacity .34s ease}
+.welcome.show{opacity:1;pointer-events:auto}
+.welcome.gone{opacity:0;pointer-events:none}
+.wc-card{width:min(440px,100%);max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);overflow:auto;
+ background:linear-gradient(180deg,#1c2312,#141a0c);border:1px solid var(--line);border-radius:20px;
+ box-shadow:0 30px 80px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.05);
+ padding:26px 22px 18px;text-align:center;transform:translateY(14px) scale(.985);
+ transition:transform .42s cubic-bezier(.32,.72,0,1)}
+.welcome.show .wc-card{transform:none}
+.wc-mark{display:flex;justify-content:center;margin-bottom:14px}
+.wc-mark .diamond{width:42px;height:42px}
+.wc-mark .diamond b{font-size:12px}
+.wc-eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--brass-deep)}
+.wc-title{font-family:var(--display);font-weight:700;font-size:25px;letter-spacing:-.02em;color:var(--stone);margin:9px 0 8px}
+.wc-sub{font-size:13px;line-height:1.5;color:var(--stone-dim);margin:0 auto 20px;max-width:36ch}
+.wc-choices{display:flex;flex-direction:column;gap:10px;text-align:left}
+.wc-choice{display:flex;align-items:center;gap:13px;width:100%;cursor:pointer;
+ background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px 14px;color:var(--stone);
+ transition:transform .12s ease,background .15s,border-color .15s;-webkit-tap-highlight-color:transparent}
+.wc-choice:hover{background:#2c3519;border-color:var(--brass-deep)}
+.wc-choice:active{transform:scale(.985)}
+.wc-choice:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.wc-ico{flex:0 0 auto;width:46px;height:46px;display:grid;place-items:center;border-radius:12px;
+ font-family:var(--mono);font-weight:700;font-size:13px;color:var(--brass);letter-spacing:-.03em;
+ background:linear-gradient(135deg,#2a3318,#1d2410);border:1px solid var(--brass-deep)}
+.wc-ct{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wc-ct b{font-weight:700;font-size:14.5px;letter-spacing:-.01em}
+.wc-ct small{font-size:11.5px;line-height:1.4;color:var(--stone-dim)}
+.wc-skip{display:block;margin:16px auto 4px;background:none;border:none;cursor:pointer;
+ font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--stone-faint);transition:color .15s}
+.wc-skip:hover{color:var(--stone-dim)}
+.wc-skip:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px}
+
+/* ===== Coachmark toast (route guidance) ===== */
+.coach{position:fixed;left:50%;top:max(env(safe-area-inset-top),12px);transform:translate(-50%,-14px);
+ z-index:1500;pointer-events:none;
+ background:rgba(20,26,12,.96);border:1px solid var(--brass-deep);border-radius:999px;padding:9px 16px;
+ color:var(--stone);font-size:12.5px;font-weight:500;box-shadow:0 12px 32px rgba(0,0,0,.5);
+ opacity:0;transition:opacity .25s ease,transform .25s ease;max-width:calc(100vw - 28px)}
+.coach.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:640px){ .wc-title{font-size:22px} .wc-card{padding:22px 18px 16px} }
+
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head><body>
 <div id="map"></div>
@@ -877,6 +923,29 @@ button.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
   <div class="legend" id="legend"></div>
  </div>
 </section>
+<div id="welcome" class="welcome" role="dialog" aria-modal="true" aria-labelledby="wc-title">
+ <div class="wc-card">
+  <div class="wc-mark"><div class="diamond"><b>WPA</b></div></div>
+  <div class="wc-eyebrow">Western Pennsylvania &middot; Rail-Trails</div>
+  <h1 id="wc-title" class="wc-title">How do you want to start?</h1>
+  <p class="wc-sub">A field guide and trip planner for the Montour, Great Allegheny Passage, Panhandle, Three Rivers, and Rachel Carson trails.</p>
+  <div class="wc-choices">
+   <button type="button" class="wc-choice" id="wc-route">
+    <span class="wc-ico">A&rarr;B</span>
+    <span class="wc-ct"><b>Plan a route</b><small>Tap your start, then your destination. Distance follows the trail.</small></span>
+   </button>
+   <button type="button" class="wc-choice" id="wc-explore">
+    <span class="wc-ico">&#9678;</span>
+    <span class="wc-ct"><b>Explore the map</b><small>Wander freely &mdash; tap trailheads, mileposts, and stops.</small></span>
+   </button>
+   <button type="button" class="wc-choice" id="wc-ai">
+    <span class="wc-ico">&#10022;</span>
+    <span class="wc-ct"><b>Let the Trail Guide plan it</b><small>Describe the ride you want; it builds one from these trails.</small></span>
+   </button>
+  </div>
+  <button type="button" class="wc-skip" id="wc-skip">Skip &mdash; don&rsquo;t show this again</button>
+ </div>
+</div>
 <script>/* @preserve
  * Leaflet 1.9.4, a JS library for interactive maps. https://leafletjs.com
  * (c) 2010-2023 Vladimir Agafonkin, (c) 2010-2011 CloudMade
@@ -951,8 +1020,9 @@ function mk(ll,icon,label,perm,pcls,stopName){var m=L.marker(ll,{icon:icon,keybo
 for(var t=0;t<trails.length;t++){var tr=trails[t],color=tr.color||'#e8b13e',i;
  var mi;
  if(tr.name==='Montour Trail'&&window.MONTOUR_SURF){
-  /* build the routing network from the real geometry (no draw), then overlay surface coloring */
-  mi=addWays(tr.ways||[],color,true);
+  /* draw the full network incl. spurs (Airport Connector, Bethel/Boyce branches),
+     then overlay the surface-type coloring on the main line */
+  mi=addWays(tr.ways||[],color);
   drawSurfaceSegs(window.MONTOUR_SURF);
  }else{mi=addWays(tr.ways||[],color);}
  legendRows.push({name:tr.name||('Trail '+(t+1)),color:color});
@@ -1076,29 +1146,148 @@ fitBtn.onclick=function(){if(trailGroup.getLayers().length)map.fitBounds(trailGr
 function toggleRT(){roundTrip=!roundTrip;rtSwitch.classList.toggle('on',roundTrip);rtSwitch.setAttribute('aria-checked',String(roundTrip));renderMarkers();recompute();}
 rtSwitch.onclick=toggleRT;
 rtSwitch.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();toggleRT();}});
-var panel=el('panel'),phead=el('phead'),handle=el('handle');
-function toggle(){var c=panel.classList.toggle('collapsed');phead.setAttribute('aria-expanded',String(!c));setTimeout(function(){map.invalidateSize();},260);}
-function setCollapsed(c){var was=panel.classList.contains('collapsed');if(was!==c){toggle();}}
-var _swiped=false,_tY=0;
-function headClick(){if(_swiped){_swiped=false;return;}toggle();}
-phead.addEventListener('click',headClick);
-handle.addEventListener('click',function(e){e.stopPropagation();if(_swiped){_swiped=false;return;}toggle();});
-phead.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();toggle();}});
-// Swipe the header/handle up or down to expand/collapse (drag-like control).
-function swStart(e){var t=e.touches&&e.touches[0];if(t)_tY=t.clientY;}
-function swEnd(e){var t=e.changedTouches&&e.changedTouches[0];if(!t)return;var dy=t.clientY-_tY;
- if(dy<-24){_swiped=true;setCollapsed(false);}      // swipe up -> expand
- else if(dy>24){_swiped=true;setCollapsed(true);}    // swipe down -> collapse
+var panel=el('panel'),phead=el('phead'),handle=el('handle'),pbody=el('pbody');
+/* ---- draggable bottom sheet: header/handle follow the finger, snap on release ----
+   The panel is anchored at the bottom and the body is its lowest section, so
+   translating the panel DOWN by part of bodyDist() reveals less of the body.
+   Three snap points on mobile: full (0), half (H/2), peek/header-only (H). */
+var sheetTY=0, sheetCollapsed=false, dragging=false;
+var dragStartY=0, dragStartTY=0, dragMoved=false;
+var lastY=0, lastT=0, vY=0;            // sampled for release velocity (px/ms, +down)
+var suppressClickUntil=0;              // a touch tap also fires a click — swallow it
+
+function bodyDist(){ return Math.max(0, pbody.offsetHeight); }   // full travel = body height
+function snapsList(){ var H=bodyDist(); return [0, H*0.5, H]; }  // full, half, peek
+function setTY(ty){ sheetTY=ty; panel.style.transform = ty>0 ? 'translateY('+ty+'px)' : ''; }
+
+function applyState(ty){
+  var H=bodyDist();
+  sheetCollapsed = ty >= H*0.75;       // a "peek" reads as collapsed for the chevron/aria
+  phead.setAttribute('aria-expanded', sheetCollapsed ? 'false' : 'true');
+  panel.classList.toggle('collapsed', sheetCollapsed);
 }
-phead.addEventListener('touchstart',swStart,{passive:true});
-phead.addEventListener('touchend',swEnd,{passive:true});
-handle.addEventListener('touchstart',swStart,{passive:true});
-handle.addEventListener('touchend',swEnd,{passive:true});
+function snapTo(ty){
+  panel.classList.remove('dragging');  // re-enable the CSS transition for the glide
+  setTY(ty); applyState(ty);
+  setTimeout(function(){ map.invalidateSize(); }, 340);
+}
+function expandSheet(){ snapTo(0); }
+function collapseSheet(){ snapTo(bodyDist()); }
+function toggleSheet(){ sheetCollapsed ? expandSheet() : collapseSheet(); }
+
+function nearestSnap(ty){
+  var s=snapsList(), best=s[0];
+  for(var i=1;i<s.length;i++){ if(Math.abs(s[i]-ty)<Math.abs(best-ty)) best=s[i]; }
+  return best;
+}
+function settle(ty, vy){
+  var H=bodyDist(), half=H*0.5, target;
+  if(Math.abs(vy) > 0.55){                       // a flick advances one snap in its direction
+    target = vy>0 ? (ty<half ? half : H)         // flicked down  -> larger ty (toward peek)
+                  : (ty>half ? half : 0);        // flicked up    -> smaller ty (toward full)
+  } else {
+    target = nearestSnap(ty);                    // a slow release snaps to the closest point
+  }
+  snapTo(target);
+}
+
+function dragStart(e){
+  var t=e.touches?e.touches[0]:e;
+  dragging=true; dragMoved=false;
+  dragStartY=t.clientY; dragStartTY=sheetTY;
+  lastY=t.clientY; lastT=Date.now(); vY=0;
+  panel.classList.add('dragging');               // transition off -> 1:1 finger tracking
+}
+function dragMove(e){
+  if(!dragging)return;
+  var t=e.touches?e.touches[0]:e, now=Date.now(), dy=t.clientY-dragStartY;
+  if(Math.abs(dy)>6) dragMoved=true;
+  var dt=now-lastT; if(dt>0) vY=(t.clientY-lastY)/dt;
+  lastY=t.clientY; lastT=now;
+  var ty=Math.max(0, Math.min(dragStartTY+dy, bodyDist()));
+  setTY(ty);
+  if(e.cancelable) e.preventDefault();           // keep the page still while dragging
+}
+function dragEnd(){
+  if(!dragging)return;
+  dragging=false;
+  suppressClickUntil=Date.now()+450;
+  if(!dragMoved){ panel.classList.remove('dragging'); toggleSheet(); return; }  // a tap
+  settle(sheetTY, vY);
+}
+phead.addEventListener('touchstart',dragStart,{passive:true});
+phead.addEventListener('touchmove',dragMove,{passive:false});
+phead.addEventListener('touchend',dragEnd,{passive:true});
+handle.addEventListener('touchstart',function(e){e.stopPropagation();dragStart(e);},{passive:true});
+handle.addEventListener('touchmove',dragMove,{passive:false});
+handle.addEventListener('touchend',function(e){e.stopPropagation();dragEnd(e);},{passive:true});
+// mouse / keyboard (desktop) — the click after a touch is swallowed so it can't double-toggle
+phead.addEventListener('click',function(){ if(Date.now()<suppressClickUntil) return; toggleSheet(); });
+phead.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();toggleSheet();}});
+// expose for the welcome overlay
+window.__expandSheet=expandSheet; window.__collapseSheet=collapseSheet;
 if(trailGroup.getLayers().length){var bb=trailGroup.getBounds();map.fitBounds(bb.pad(0.05));try{map.setMaxBounds(bb.pad(0.5));}catch(e){}}
-if(window.matchMedia&&window.matchMedia('(max-width:640px)').matches){panel.classList.add('collapsed');phead.setAttribute('aria-expanded','false');}
+if(window.matchMedia&&window.matchMedia('(max-width:640px)').matches){
+  panel.classList.add('dragging');               // suppress the transition for first paint
+  setTY(bodyDist()); applyState(bodyDist());
+  requestAnimationFrame(function(){ panel.classList.remove('dragging'); });
+}
 dataReady=true;recompute();
 var st=el('status');el('statusText').textContent=(trails[0]?trails[0].name:'Trail')+' \u00b7 tap markers or map to plan a trip \u00b7 works offline';
 setTimeout(function(){st.classList.add('hidden');},6500);
+
+/* ===== Welcome / onboarding ===== */
+(function initWelcome(){
+  var wrap=el('welcome'); if(!wrap) return;
+  var KEY='wpa_welcome_dismissed_v1', skip=false;
+  try{ skip = localStorage.getItem(KEY)==='1'; }catch(e){}
+  if(skip){ if(wrap.parentNode) wrap.parentNode.removeChild(wrap); return; }
+  var isMobile = !!(window.matchMedia && window.matchMedia('(max-width:640px)').matches);
+
+  function dismiss(remember){
+    if(remember){ try{ localStorage.setItem(KEY,'1'); }catch(e){} }
+    wrap.classList.add('gone');
+    setTimeout(function(){ if(wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 380);
+  }
+  // small toast over the map; replaces the status hint so they don't overlap
+  function coach(msg, ms){
+    var c=el('coach');
+    if(!c){ c=document.createElement('div'); c.id='coach'; c.className='coach'; document.body.appendChild(c); }
+    var sb=el('status'); if(sb) sb.classList.add('hidden');
+    c.textContent=msg; c.classList.add('show');
+    clearTimeout(coach._t);
+    coach._t=setTimeout(function(){ c.classList.remove('show'); }, ms||3800);
+  }
+  window.__coach=coach;
+
+  function startRoute(){
+    dismiss(false);
+    if(isMobile && window.__expandSheet) window.__expandSheet();
+    coach('Tap your starting point on the trail', 4500);
+    map.once('click', function(){ setTimeout(function(){ coach('Now tap your destination', 4000); }, 140); });
+  }
+  function explore(){
+    dismiss(false);
+    if(isMobile && window.__collapseSheet) window.__collapseSheet();
+  }
+  function aiPlan(){
+    dismiss(false);
+    if(isMobile && window.__expandSheet) window.__expandSheet();
+    var rideBtn=document.querySelector('.ai-mode[data-mode="ride"]');
+    if(rideBtn) rideBtn.click();
+    var aiBlock=el('ai'); if(aiBlock) try{ aiBlock.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){}
+    setTimeout(function(){ var t=el('aiIn'); if(t) t.focus(); }, 440);
+  }
+
+  el('wc-route').addEventListener('click', startRoute);
+  el('wc-explore').addEventListener('click', explore);
+  el('wc-ai').addEventListener('click', aiPlan);
+  var sk=el('wc-skip'); if(sk) sk.addEventListener('click', function(){ dismiss(true); });
+  // dismiss on backdrop tap (but not when tapping the card)
+  wrap.addEventListener('click', function(e){ if(e.target===wrap) dismiss(false); });
+
+  requestAnimationFrame(function(){ wrap.classList.add('show'); });
+})();
 
 /* ===== AI Trail Guide (inside APP scope) ===== */
 /* ============================================================
