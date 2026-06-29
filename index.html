@@ -924,16 +924,16 @@ function drawSurfaceSegs(surfaceSegs){
   drawRun(seg.coords,null,seg.surface);
  }
 }
-function addWays(ways,color){var miles=0;
+function addWays(ways,color,noDraw){var miles=0;
  for(var w=0;w<ways.length;w++){var way=ways[w],run=[],prev=null;
   for(var k=0;k<way.length;k++){var lat=way[k][0],lon=way[k][1],id=getId(lat,lon);
    if(prev!==null){var A=nodes.get(prev),B=nodes.get(id),len=Math.hypot(A.x-B.x,A.y-B.y);
-    if(len>BREAKM){drawRun(run,color);run=[[lat,lon]];prev=id;continue;}
+    if(len>BREAKM){if(!noDraw)drawRun(run,color);run=[[lat,lon]];prev=id;continue;}
     if(prev!==id){var ek=prev<id?prev+'_'+id:id+'_'+prev;
      if(!seen.has(ek)){seen.add(ek);miles+=len;segs.push({aId:prev,bId:id,ax:A.x,ay:A.y,bx:B.x,by:B.y,len:len});}
      addEdge(prev,id,len);}}
    run.push([lat,lon]);prev=id;}
-  drawRun(run,color);}
+  if(!noDraw)drawRun(run,color);}
  return miles/MI;}
 var TENT='<svg viewBox="0 0 12 12" width="11" height="11"><path d="M6 1.6L11 11H1z" fill="#0b2410"/></svg>';
 function sym(cls,inner){return L.divIcon({className:'symwrap',html:'<span class="sym '+cls+'">'+(inner||'')+'</span>',iconSize:[18,18],iconAnchor:[9,9]});}
@@ -944,9 +944,9 @@ function mk(ll,icon,label,perm,pcls,stopName){var m=L.marker(ll,{icon:icon,keybo
 for(var t=0;t<trails.length;t++){var tr=trails[t],color=tr.color||'#e8b13e',i;
  var mi;
  if(tr.name==='Montour Trail'&&window.MONTOUR_SURF){
-  /* render Montour Trail with surface-type coloring */
+  /* build the routing network from the real geometry (no draw), then overlay surface coloring */
+  mi=addWays(tr.ways||[],color,true);
   drawSurfaceSegs(window.MONTOUR_SURF);
-  mi=47.07;
  }else{mi=addWays(tr.ways||[],color);}
  legendRows.push({name:tr.name||('Trail '+(t+1)),color:color});
  var ac=tr.access||[];for(i=0;i<ac.length;i++)mk([ac[i].lat,ac[i].lon],sym('access','P'),ac[i].name,false,null,ac[i].name);
