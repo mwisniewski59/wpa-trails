@@ -8,7 +8,12 @@
 //      add  GEMINI_API_KEY = your_key_here
 //   3. Redeploy. That's it — the key never touches the browser.
 
-const GEMINI_MODEL = "gemini-2.0-flash"; // free-tier-eligible, 1M context, cheapest paid rate
+// gemini-2.5-flash is the current free-tier-eligible model (as of mid-2026).
+// Google cut free-tier limits in Dec 2025 and 2.0-flash now has near-zero free quota,
+// which causes a 429 on the very first request. If you still hit 429s on the free tier,
+// enabling billing in Google AI Studio unlocks Tier 1 (no minimum spend) and clears it.
+// Alternatives if you want higher free limits: "gemini-2.5-flash-lite".
+const GEMINI_MODEL = "gemini-2.5-flash";
 const GEMINI_URL = (key) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${key}`;
 
@@ -185,27 +190,43 @@ export default async function handler(req, res) {
 
   const prompt = buildPrompt(mode, question, pois, context);
 
+  // Call Gemini with a couple of short retries on transient limits (429/503).
+  async function callGemini() {
+    const payload = {
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1024,
+        responseMimeType: "application/json", // ask Gemini for raw JSON
+      },
+    };
+    const delays = [0, 900, 2200]; // first try immediate, then backoff
+    let last = null;
+    for (let i = 0; i < delays.length; i++) {
+      if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
+      const r = await fetch(GEMINI_URL(key), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (r.ok) return r;
+      last = r;
+      if (r.status !== 429 && r.status !== 503) return r; // non-transient: stop
+    }
+    return last;
+  }
+
   try {
-    const gRes = await fetch(GEMINI_URL(key), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 1024,
-          responseMimeType: "application/json", // ask Gemini for raw JSON
-        },
-      }),
-    });
+    const gRes = await callGemini();
 
     if (!gRes.ok) {
       const errText = await gRes.text();
-      // surface 429s from Gemini distinctly so the UI can explain it
       if (gRes.status === 429)
         return res.status(429).json({
           error:
-            "Gemini's free limit is maxed out for the moment. Give it a minute and try again.",
+            "Gemini's free tier is rate-limited right now (Google cut free limits in late 2025). " +
+            "Wait a minute and retry. If it keeps happening, enable billing in Google AI Studio " +
+            "to unlock Tier 1 — it has no minimum spend and clears this immediately.",
         });
       return res
         .status(502)
